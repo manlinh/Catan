@@ -30,7 +30,7 @@ void* UPPER_BOUND_DEFAULT(void*, void*, void*, size_t,
 #define SWAP_ERROR printf("at %d swap error\n", __LINE__)
 #define swap(a, b)                       \
     if (sizeof(a) == sizeof(b)) {        \
-        printf("%d \n", sizeof(a));      \
+        printf("%d \n", (int)sizeof(a));      \
         SWAP_DEFAULT(&a, &b, sizeof(a)); \
     } else {                             \
         SWAP_ERROR;                      \
