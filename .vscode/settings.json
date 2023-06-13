@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "structure.h": "c",
+        "vectorint.h": "c",
+        "time.h": "c",
+        "panda.h": "c"
+    }
+}
