@@ -426,7 +426,7 @@ void trade(int i, player *gamePlayer, port *tradePort) {
   }
 
   // print best options
-  printf("you can give %d %s or %d 2.%s or %d %s or %d %s or %d %s or for one "
+  printf("you can give %d %s or %d %s or %d %s or %d %s or %d %s or for one "
          "resource (1. wood 2. bricks 3. wool 4. wheat 5. metal): give, get",
          best_trade_int[1], resourceStr[1], best_trade_int[2], resourceStr[2],
          best_trade_int[3], resourceStr[3], best_trade_int[4], resourceStr[4],
