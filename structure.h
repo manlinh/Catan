@@ -88,10 +88,10 @@ void roober_discard_resources(int current_player, player *gamePlayer, int player
 void sswap(int *a, int *b);
 void  random_Array(int *arr, int size);
 void bot_discards_resources(int bot_player, player *gamePlayer, int playerNumber, piece *land);
-void bot_choose_robber(int bot_player, int robber_land,int desert_land, int *input_land);
+void bot_choose_robber(int bot_player, piece *land, int robber_land,int desert_land, int *input_land);
 void trade(int current_palyer, player *gamePlayer, port *tradePort);
 void robber(int current_player, player *gamePlayer, int playerNumber,piece *land);
-void robberK(int current_player, player *gamePlayer, int playerNumber,     piece *land);
+void robberK(int current_player, player **gamePlayer, int playerNumber, piece **land);
 int score_calculate();
 void knight_king(player *gamePlayer, int current_player, int playerNumber, int *knight_owner);
 #endif

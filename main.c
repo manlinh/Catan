@@ -276,23 +276,25 @@ int main() {
     setUpGame();
     gamePlayer[0].bot = 1;
     int knight_owner = 0;
+    
     while(score_calculate()){
         for (int i = 0; i < playerNumber; ++i) {
             int state = 0;
             int step = 0;
             int number;
             int haveK = 0;
-            for (int j = 0; j < gamePlayer[i].card->size; ++i) {
+            gamePlayer[i].card->insert(gamePlayer[i].card, gamePlayer[i].card->size, KNIGHT);
+            for (int j = 0; j < gamePlayer[i].card->size; ++j) {
                 if (gamePlayer[i].card->get(gamePlayer[i].card, j) == KNIGHT) {
                     ++haveK;
-                }
+                } 
             }
             //display_details(i);
             while (1) {
                 state = 0;
                 printMap(land, 19, tradePort, MAPSIZE, SEASIZE);
                 printf("\e[38;5;%dmplayer %d \e[0m\n", TEAMCOLOR[gamePlayer[i].type], i+1);
-                if (state == 0) { // doro
+                while (state == 0) { // doro
                     printf("1.roll dice\n");
                     if (haveK) {
                         printf("2. use Knight Card\n");
@@ -312,15 +314,21 @@ int main() {
                         }
                         state = 1;
                     } else if (step == 2 && haveK) {
+                        haveK = 0;
+                        for (int j = 0; j < gamePlayer[i].card->size; ++j) {
+                            if (gamePlayer[i].card->get(gamePlayer[i].card, j) == KNIGHT) {
+                                gamePlayer[i].card->remove(gamePlayer[i].card, j);
+                                break;
+                            } 
+                        }
                         if(gamePlayer[i].bot){
-                            if(rand()%2)
-                                bot_robberK(i, gamePlayer, playerNumber, land);
+                                bot_robberK(i, gamePlayer, playerNumber, land);          
                         }
                         else{
-                            robberK(i, gamePlayer, playerNumber, land);
-                            knight_king(gamePlayer, i, playerNumber, &knight_owner);
-                            haveK = 0;
+                            printf("in\n");
+                            robberK(i, &gamePlayer, playerNumber, &land);
                         }
+                        //knight_king(gamePlayer, i, playerNumber, &knight_owner);
                     }
                 }
                 while(state == 1) {    
@@ -349,5 +357,6 @@ int main() {
             }
         }
     }
+
 
 }
