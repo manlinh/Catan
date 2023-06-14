@@ -6,25 +6,48 @@
 extern node corner[54];
 extern side edge[72];
 extern int nextdevelopCard;
-//just to simply run
-int botOption(int state, player *Players, int index, piece *lands, int haveK) {
-    if (state == 0 && haveK) {
-        printf("step 2\n");
-        return 2;
-    }
-    else if(state == 0){
-        printf("step 1\n");
+int botOption(int state, player *Players, int index, piece *lands) {
+    // draw
+    if (state == 1) {
+        printf("1\n");
         return 1;
     }
-    else if(state == 1){
-        printf("step 2\n");
+    // use card
+    if (Players[index].card->size) {
+        for (int i = 0; i < Players[index].card->size; ++i) {
+            if (Players[index].card->data[i] <= 4) {
+                printf("%d\n", state == 1 ? 2 : 5);
+                return state == 1 ? 2 : 5;
+            }
+        }
+    }
+    // build city
+
+    if (testBuildCity(Players, index)) {
+        printf("3\n");
+        return 3;
+    }
+    // build swttlement
+    if (testBuildSwttlement(Players, index)) {
+        printf("2\n");
         return 2;
     }
-    else if(state == 2){
-        printf("step 1\n");
+    // build road
+    if (testBuildRoad(Players, index)) {
+        printf("1\n");
         return 1;
     }
-    
+    // draw develop card
+
+    if (Players[index].resource[WOOL] >= 1 &&
+        Players[index].resource[WHEAT] >= 1 &&
+        Players[index].resource[METAL] >= 1 && nextdevelopCard < 25) {
+        printf("4\n");
+        return 4;
+    }
+    // end trun
+    printf("0\n");
+    return 0;
 }
 
 int botRobber(piece *land, int playerID) {
@@ -34,7 +57,6 @@ int botRobber(piece *land, int playerID) {
         double nowWeights = 0;
         int peoplenearhere = 0;
         for (int j = 0; j < 6; ++j) {
-            //如果這塊land至少一個點是public，那peoplenearhere = 0，所以peoplenearhere max =1
             if (land[i].linkedNode[j]->belong != playerID &&
                 land[i].linkedNode[j]->belong != PUBLIC) {
                 peoplenearhere++;
@@ -43,7 +65,6 @@ int botRobber(piece *land, int playerID) {
                 break;
             }
         }
-        //那這裡又如何sqrt(peoplenearhere==1)，想大概問這個97行
         nowWeights = (6 - abs(land[i].number - 7) *
                               log(10 * (land[i].type == DESERT ? 0.1 : 1)) *
                               sqrt(peoplenearhere));
@@ -52,5 +73,13 @@ int botRobber(piece *land, int playerID) {
             bestWeights = nowWeights;
         }
     }
+    printf("%d\n", bestID);
     return bestID;
 }
+void botChooseBestRoad(piece *p, player *players, int index, int *landID,
+                       int *roadID) {}
+
+void botChooseBestSwttlement(piece *p, player *players, int index, int *landID,
+                             int *roadID) {}
+void botChooseBestCity(piece *p, player *players, int index, int *landID,
+                       int *roadID) {}
