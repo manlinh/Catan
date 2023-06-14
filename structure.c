@@ -9,7 +9,6 @@
 #include <string.h>
 #include <time.h>
 
-
 #include "bot.h"
 #include "panda.h"
 #include "vectorInt.h"
@@ -17,10 +16,10 @@ const int ORDER[19] = {16, 17, 18, 15, 11, 6, 2, 1, 0, 3,
                        7,  12, 13, 14, 10, 5, 4, 8, 9};
 const int NUMBER[18] = {5, 2, 6,  3, 8, 10, 9, 12, 11,
                         4, 8, 10, 9, 4, 5,  6, 3,  11};
-const int TEAMCOLOR[5] = {255, 93, 75, 82, 196};
+const int TEAMCOLOR[7] = {255, 93, 75, 82, 196, 10, 15};
 const int PIECECOLOR[6] = {11, 28, 202, 145, 94, 237};
-const int PORTCOLOR[6] = {241, 136, 255, 9, 226, 246};
-const char PORTTEXT[6] = {'?', 'l', 'w', 'b', 'h', 'm'};
+const int PORTCOLOR[6] = {0, 28, 202, 145, 94, 237};
+const char PORTTEXT[6] = {'?', 'l', 'b', 'w', 'h', 'm'};
 const char NODETYPE[3] = {' ', 's', 'c'};
 const int NUMSHOW[10][7] = {
     {1, 1, 1, 0, 1, 1, 1}, {0, 0, 1, 0, 0, 1, 0}, {1, 0, 1, 1, 1, 0, 1},
@@ -43,6 +42,8 @@ piece land[19];
 int playerNumber = 0;
 int developCard[25];
 int nextdevelopCard = 0;
+int longestPerson = -1;
+int mostKnightPerson = -1;
 void initGame(piece *p, node *n, side *s) {
     // corner bind
     for (int i = 0; i < 19; ++i) {
@@ -121,13 +122,11 @@ void initPlayer(player *p) {
     p->knight = p->road = p->Score = 0;
     p->haveNode = create_vector_vectorInt();
     p->haveSide = create_vector_vectorInt();
-    p->havePort = create_vector_vectorInt();
     p->type = 0;
 }
 void freePlayer(player *p) {
     p->haveNode->free(p->haveNode);
     p->haveSide->free(p->haveSide);
-    p->havePort->free(p->havePort);
     p->card->free(p->card);
     free(p);
 }
@@ -171,8 +170,8 @@ int rollDice() {
     int a, b;
     a = rand() % 6 + 1;
     b = rand() % 6 + 1;
-    printf("roll %d and %d => 12\n", a, b);
-    return 12;//a + b;
+    printf("roll %d and %d => %d\n", a, b, a + b);
+    return a + b;
 }
 
 void shuffle(piece *p, int n, int times) {
@@ -236,6 +235,7 @@ static char numberofPiece(int x, int y, int num) {
 }
 static void printpart(const piece *p, int l, int r, int t, int tl, int size,
                       int space) {
+    /* / \*/
     for (int i = 0; i < size; ++i) {
         for (int j = 0; j < space; ++j) printf("\e[48;5;17m \e[0m");
         for (int k = l; k <= r; ++k) {
@@ -340,6 +340,7 @@ static void printpart(const piece *p, int l, int r, int t, int tl, int size,
 
         printf("\n");
     }
+    /*| |*/
     for (int i = 0; i < size; ++i) {
         for (int j = 0; j < space; ++j) printf("\e[48;5;17m \e[0m");
         for (int k = l; k <= r; ++k) {
@@ -347,7 +348,50 @@ static void printpart(const piece *p, int l, int r, int t, int tl, int size,
                 for (int j = 0; j < (size)*3 * 2; ++j)
                     printf("\e[48;5;17m \e[0m");
             if (k == 3 || k == 12)
-                for (int j = 0; j < (size)*3; ++j) printf("\e[48;5;17m \e[0m");
+                for (int j = 0; j < (size)*3; ++j) {
+                    if (k == 3 && j >= size * 3 - 13 && j < size * 3 - 2 &&
+                        i < size && i >= size - 3) {
+                        printf("\e[48;5;%dm", PORTCOLOR[tradePort[3].type]);
+                        if (j - size * 3 + 13 < 2 || j - size * 3 + 13 > 8) {
+                            printf("%c", PORTTEXT[tradePort[3].type]);
+                        } else {
+                            if (j - size * 3 + 13 < 5)
+                                printf("%c",
+                                       numberofPiece(i - size + 3,
+                                                     j - size * 3 + 13 - 2,
+                                                     tradePort[3].request));
+                            else if (j - size * 3 + 13 > 5)
+                                printf("%c", numberofPiece(
+                                                 i - size + 3,
+                                                 j - size * 3 + 12 - 5 - 1, 1));
+                            else {
+                                printf("%c", i - size + 3 == 1 ? ':' : ' ');
+                            }
+                        }
+                        printf("\e[0m");
+                    } else if (k == 12 && j >= size * 3 - 13 &&
+                               j < size * 3 - 2 && i < size && i >= size - 3) {
+                        printf("\e[48;5;%dm", PORTCOLOR[tradePort[4].type]);
+                        if (j - size * 3 + 13 < 2 || j - size * 3 + 13 > 8) {
+                            printf("%c", PORTTEXT[tradePort[4].type]);
+                        } else {
+                            if (j - size * 3 + 13 < 5)
+                                printf("%c",
+                                       numberofPiece(i - size + 3,
+                                                     j - size * 3 + 13 - 2,
+                                                     tradePort[4].request));
+                            else if (j - size * 3 + 13 > 5)
+                                printf("%c", numberofPiece(
+                                                 i - size + 3,
+                                                 j - size * 3 + 12 - 5 - 1, 1));
+                            else {
+                                printf("%c", i - size + 3 == 1 ? ':' : ' ');
+                            }
+                        }
+                        printf("\e[0m");
+                    } else
+                        printf("\e[48;5;17m \e[0m");
+                }
             printf("\e[38;5;%dm|\e[0m", TEAMCOLOR[p[k].linkedSide[2]->belong]);
 
             for (int j = 0; j < 2 * (size)*3 - 1; ++j) {
@@ -371,17 +415,75 @@ static void printpart(const piece *p, int l, int r, int t, int tl, int size,
                 printf("\e[38;5;%dm|\e[0m",
                        TEAMCOLOR[p[k].linkedSide[3]->belong]);
                 if (r == 2 || r == 18)
-                    for (int j = 0; j < (size)*6; ++j)
-                        printf("\e[48;5;17m \e[0m");
+                    for (int j = 0; j < (size)*6; ++j) {
+                        if (r == 2 && j <= 12 && j >= 2 && i < size &&
+                            i >= size - 3) {
+                            printf("\e[48;5;%dm", PORTCOLOR[tradePort[2].type]);
+                            if (j < 4 || j > 10) {
+                                printf("%c", PORTTEXT[tradePort[2].type]);
+                            } else {
+                                if (j < 7)
+                                    printf("%c",
+                                           numberofPiece(i - size + 3, j - 4,
+                                                         tradePort[2].request));
+                                else if (j > 7)
+                                    printf("%c", numberofPiece(i - size + 3,
+                                                               j - 7 - 1, 1));
+                                else {
+                                    printf("%c", i - size + 3 == 1 ? ':' : ' ');
+                                }
+                            }
+                            printf("\e[0m");
+                        } else if (r == 18 && j <= 12 && j >= 2 && i < size &&
+                                   i >= size - 3) {
+                            printf("\e[48;5;%dm", PORTCOLOR[tradePort[7].type]);
+                            if (j < 4 || j > 10) {
+                                printf("%c", PORTTEXT[tradePort[7].type]);
+                            } else {
+                                if (j < 7)
+                                    printf("%c",
+                                           numberofPiece(i - size + 3, j - 4,
+                                                         tradePort[7].request));
+                                else if (j > 7)
+                                    printf("%c", numberofPiece(i - size + 3,
+                                                               j - 7 - 1, 1));
+                                else {
+                                    printf("%c", i - size + 3 == 1 ? ':' : ' ');
+                                }
+                            }
+                            printf("\e[0m");
+                        } else
+                            printf("\e[48;5;17m \e[0m");
+                    }
                 if (r == 6 || r == 15)
                     for (int j = 0; j < (size)*3; ++j)
                         printf("\e[48;5;17m \e[0m");
             }
         }
-        for (int j = 0; j < space; ++j) printf("\e[48;5;17m \e[0m");
+        for (int j = 0; j < space; ++j) {
+            if (r == 11 && j <= 12 && j >= 2 && i < size && i >= size - 3) {
+                printf("\e[48;5;%dm", PORTCOLOR[tradePort[5].type]);
+                if (j < 4 || j > 10) {
+                    printf("%c", PORTTEXT[tradePort[5].type]);
+                } else {
+                    if (j < 7)
+                        printf("%c", numberofPiece(i - size + 3, j - 4,
+                                                   tradePort[5].request));
+                    else if (j > 7)
+                        printf("%c", numberofPiece(i - size + 3, j - 7 - 1, 1));
+                    else {
+                        printf("%c", i - size + 3 == 1 ? ':' : ' ');
+                    }
+                }
+                printf("\e[0m");
+            } else {
+                printf("\e[48;5;17m \e[0m");
+            }
+        }
 
         printf("\n");
     }
+    /* \ / */
     if (l == 16) {
         for (int i = 0; i < size; ++i) {
             for (int j = 0; j < space; ++j) printf("\e[48;5;17m \e[0m");
@@ -426,334 +528,293 @@ static void printpart(const piece *p, int l, int r, int t, int tl, int size,
     }
 }
 void printMap(const piece *p, int n, const port *t, int size, int space) {
+    for (int c = 0; c < space >> 1; ++c) {
+        for (int i = 0; i < 10 * 3 * size + 1 + 2 * space; ++i) {
+            if ((space >> 1) - c <= 3 && i > space + 3 * 2 * size - 6 &&
+                i < space + 3 * 2 * size + 6) {
+                printf("\e[48;5;%dm", PORTCOLOR[tradePort[0].type]);
+                if (i < space + 3 * 2 * size - 3 ||
+                    i > space + 3 * 2 * size + 3)
+                    printf("%c", PORTTEXT[tradePort[0].type]);
+                else {
+                    if (i < space + 3 * 2 * size) {
+                        printf("%c",
+                               numberofPiece(3 - (space >> 1) + c,
+                                             i - (space + 3 * 2 * size - 3),
+                                             tradePort[0].request));
+                    } else if (i > space + 3 * 2 * size) {
+                        printf("%c", numberofPiece(
+                                         3 - (space >> 1) + c,
+                                         i - (space + 3 * 2 * size) - 1, 1));
+                    } else {
+                        if (3 - (space >> 1) + c == 1)
+                            printf(":");
+                        else
+                            printf(" ");
+                    }
+                }
+                printf("\e[0m");
+            } else if ((space >> 1) - c <= 3 &&
+                       i > space + 3 * 6 * size - size - 6 &&
+                       i < space + 6 * 3 * size - size + 6) {
+                printf("\e[48;5;%dm", PORTCOLOR[tradePort[1].type]);
+                if (i < space + 3 * 6 * size - size - 3 ||
+                    i > space + 3 * 6 * size - size + 3)
+                    printf("%c", PORTTEXT[tradePort[1].type]);
+                else {
+                    if (i < space + 3 * 6 * size - size) {
+                        printf("%c", numberofPiece(
+                                         3 - (space >> 1) + c,
+                                         i - (space + 3 * 6 * size - size - 3),
+                                         tradePort[1].request));
+                    } else if (i > space + 3 * 6 * size - size) {
+                        printf("%c",
+                               numberofPiece(
+                                   3 - (space >> 1) + c,
+                                   i - (space + 3 * 6 * size - size) - 1, 1));
+                    } else {
+                        if (3 - (space >> 1) + c == 1)
+                            printf(":");
+                        else
+                            printf(" ");
+                    }
+                }
+                printf("\e[0m");
+            } else
+                printf("\e[48;5;17m \e[0m");
+        }
+        printf("\n");
+    }
     printpart(p, 0, 2, 5, t[3].type, size, space);
     printpart(p, 3, 6, 3, t[2].type, size, space);
     printpart(p, 7, 11, 1, t[5].type, size, space);
     printpart(p, 12, 15, 3, t[4].type, size, space);
     printpart(p, 16, 18, 5, t[7].type, size, space);
-}
-
-
-
-
-
-
-void sswap(int *a, int *b){
-    int tmp = *a;
-    *a = *b;
-    *b = tmp;
-    return;
-}
-void  random_Array(int *arr, int size){
-    int *chosen_index = calloc(size, sizeof(int));
-    srand(time(NULL));
-    for(int i = 0; i < size; i++){
-        int rnum = rand() % size;
-        while(!chosen_index[rnum]){
-            swap(arr[i], arr[rnum]);
-            chosen_index[rnum] = 1;
+    for (int c = 0; c < space >> 1; ++c) {
+        for (int i = 0; i < 10 * 3 * size + 1 + 2 * space; ++i) {
+            if (c < 3 && i > space + 3 * 2 * size - 6 &&
+                i < space + 3 * 2 * size + 6) {
+                printf("\e[48;5;%dm", PORTCOLOR[tradePort[6].type]);
+                if (i < space + 3 * 2 * size - 3 ||
+                    i > space + 3 * 2 * size + 3)
+                    printf("%c", PORTTEXT[tradePort[6].type]);
+                else {
+                    if (i < space + 3 * 2 * size) {
+                        printf("%c",
+                               numberofPiece(c, i - (space + 3 * 2 * size - 3),
+                                             tradePort[6].request));
+                    } else if (i > space + 3 * 2 * size) {
+                        printf("%c", numberofPiece(
+                                         c, i - (space + 3 * 2 * size) - 1, 1));
+                    } else {
+                        if (c == 1)
+                            printf(":");
+                        else
+                            printf(" ");
+                    }
+                }
+                printf("\e[0m");
+            } else if (c < 3 && i > space + 3 * 6 * size - size - 6 &&
+                       i < space + 6 * 3 * size - size + 6) {
+                printf("\e[48;5;%dm", PORTCOLOR[tradePort[8].type]);
+                if (i < space + 3 * 6 * size - size - 3 ||
+                    i > space + 3 * 6 * size - size + 3)
+                    printf("%c", PORTTEXT[tradePort[8].type]);
+                else {
+                    if (i < space + 3 * 6 * size - size) {
+                        printf("%c",
+                               numberofPiece(
+                                   c, i - (space + 3 * 6 * size - size - 3),
+                                   tradePort[8].request));
+                    } else if (i > space + 3 * 6 * size - size) {
+                        printf(
+                            "%c",
+                            numberofPiece(
+                                c, i - (space + 3 * 6 * size - size) - 1, 1));
+                    } else {
+                        if (c == 1)
+                            printf(":");
+                        else
+                            printf(" ");
+                    }
+                }
+                printf("\e[0m");
+            } else
+                printf("\e[48;5;17m \e[0m");
         }
+        printf("\n");
     }
-    free(chosen_index);
-    return;
 }
-void giveResource(int index, int playerNum) {
+void robber(piece *land, int *robberLoc, int locate) {
+    printf("Robber!\n");
+    while (1) {
+        printf("choice locate:");
+        if (locate == *robberLoc)
+            printf("this locate is already robber\n");
+        else if (locate < 0 || locate >= 19)
+            printf("you should input in [0,18]\n");
+        else
+            break;
+    }
+    land[*robberLoc].robber = 0;
+    land[locate].robber = 1;
+    *robberLoc = locate;
+}
+void giveResource(piece *land, int index, player *p, int playerNum) {
     for (int i = 0; i < 6; ++i) {
         if (land[index].linkedNode[i]->belong) {
             for (int j = 0; j < playerNum; ++j) {
-                if (gamePlayer[j].type == land[index].linkedNode[i]->belong) {
-                    gamePlayer[j].resource[land[index].type]++;
+                if (p[j].type == land[index].linkedNode[i]->belong) {
+                    p[j].resource[land[index].type]++;
                     break;
                 }
             }
         }
     }
 }
-void bot_discards_resources(int bot_player, int playerNumber){
-
-    int *bot_random_resources;// an array with randomized resources of bot player e.g. 1 3 4 5 2 1 -> 2 wood .....
-    int brr_idx = 0; // ^'s index
-    int give_amount = 0, total_input = 0;
-    int array_give[6]={0};
-    for (int k = 1; k < 6; k++) {
-      give_amount += gamePlayer[bot_player].resource[k];
-    }
-    if (give_amount <= 7) {
-      return;
-    }
-    bot_random_resources = malloc(give_amount * sizeof(int));
-  
-    for (int k = 1; k < 6; k++) {
-        for(int j = 0; j < gamePlayer[bot_player].resource[k]; j++){
-            bot_random_resources[brr_idx++] = k;
+void chooseRobber(player *p, int index) {
+    int locate;
+    if (p[index].bot) {
+        locate = botRobber(land, index);
+    } else {
+        printf("which land you want to robber?");
+        while (1) {
+            scanf("%d", &locate);
+            if (locate < 19 && locate >= 0 && !land[locate].robber) break;
+            printf("locate should in [0,18] and not been robber");
         }
     }
-    give_amount = (give_amount + (give_amount % 2)) / 2;
-    random_Array(bot_random_resources, brr_idx);
-    for(int i = 0; i < give_amount; i ++){
-        int that_resource = bot_random_resources[i];
-        array_give[that_resource] ++;
-        gamePlayer[bot_player].resource[that_resource] -- ;
-    }
-    free(bot_random_resources);
-    printf("\e[38;5;%dmplayer %d \e[0m please would %d resources to giveup, as follows\n", TEAMCOLOR[gamePlayer[bot_player].type], bot_player + 1, give_amount);
-    printf("wood:%d bricks:%d wool:%d wheat:%d metal:%d\n",
-           array_give[WOOD], array_give[BRICKS],
-          array_give[WOOL], array_give[WHEAT],
-           array_give[METAL]);
-    
-    return;
+    robber(land, &robberLoc, locate);
 }
-// bot is moving robber
-void bot_choose_robber(int bot_player, int robber_land,int desert_land, int *input_land){
-    int is_self_here[20] = {0};
-    int opponents_num_here[20]={0};
-    is_self_here[19] = 0;
-    opponents_num_here[19] = 0;
-    for (int i = 0; i < 19; ++i) {
-        if(i == desert_land || i == robber_land)
-            continue;
-        for (int j = 0; j < 6; ++j) {
-            if (land[i].linkedNode[j]->belong != bot_player+1 &&
-                land[i].linkedNode[j]->belong != PUBLIC) {
-                opponents_num_here[i]++;
-            } else if (land[i].linkedNode[j]->belong == bot_player) {
-                is_self_here[i] = 1;
+bool testBuildRoad(player *Players, int index) {
+    if (Players[index].resource[BRICKS] >= 1 &&
+        Players[index].resource[WOOD] >= 1 &&
+        Players[index].haveSide->size <= 15) {
+        for (int i = 0; i < Players[index].haveSide->size; ++i) {
+            for (int j = 0; j < 2; ++j) {
+                for (int k = 0; k < 3; ++k) {
+                    if (edge[Players[index].haveSide->data[i]]
+                            .linkedNode[j]
+                            ->linkedSide[k]
+                            ->belong == None) {
+                        return 1;
+                    }
+                }
             }
         }
     }
-    int best;
-    int priority = 4;
-    for(int i = 0; i < 19; i++){
-        if(i == desert_land || i == robber_land)
-            continue;
-        if(is_self_here[i] == 0 && opponents_num_here[i] > 0){
-            best = i;
-            priority = 1;
-            break;
-        }
-        if(is_self_here[i] == 0 && opponents_num_here[i] >0 && priority > 2){
-            best = i;
-            priority = 2;
-        }
-        if(is_self_here[i] == 0 && opponents_num_here[i] == 0 && priority > 3){
-            best = i;
-            priority =3;
-        }
-    }
-    if(priority == 4){
-        srand(time(NULL));
-        while((*input_land = (rand() % 19))!= desert_land && *input_land != robber_land);
-        return;
-    }
-    else
-        *input_land = best;
-    return;
+    return 0;
 }
-/*void playercpy(player *dest, player *src ){
-
-  return;
-}*/
-void robber(int current_player, int playerNumber) {
-  // give up resouces more than 7
-  for (int i = 0; i < playerNumber; i++) {
-    if(gamePlayer[i].bot){
-        bot_discards_resources(i, playerNumber);
-        continue;
-    }
-    int give_amount = 0, total_input = 0;
-    int array_give[6];
-    for (int k = 1; k < 6; k++) {
-      give_amount += gamePlayer[i].resource[k];
-    }
-    if (give_amount <= 7) {
-      continue;
-    }
-    give_amount = (give_amount + (give_amount % 2)) / 2;
-    printf("\e[38;5;%dmplayer %d \e[0m please choose %d resources to giveup\n", TEAMCOLOR[gamePlayer[i].type], i + 1, give_amount);
-    printf("wood:%d bricks:%d wool:%d wheat:%d metal:%d\n",
-           gamePlayer[i].resource[WOOD], gamePlayer[i].resource[BRICKS],
-           gamePlayer[i].resource[WOOL], gamePlayer[i].resource[WHEAT],
-           gamePlayer[i].resource[METAL]);
-    int red_flag = 0;
-    while (give_amount != total_input || red_flag) {
-      red_flag = 0;
-      printf("%d amount of resource should be given, how would you give?\n input:wood, bricks, wool, wheat, metal\n",
-             give_amount);
-      scanf(" %d %d %d %d %d", &array_give[WOOD], &array_give[BRICKS],
-            &array_give[WOOL], &array_give[WHEAT], &array_give[METAL]);
-      total_input = 0;
-      for (int k = 1; k < 6; k++) {
-        total_input += array_give[k];
-        if (gamePlayer[i].resource[k] < array_give[k] || array_give[k] < 0) {
-          red_flag = 1;
-          printf("\e[4;31m wrong input! please input legally\e[0m\n");
-          break;
+bool testBuildSwttlement(player *Players, int index) {
+    if (Players[index].resource[BRICKS] >= 1 &&
+        Players[index].resource[WOOD] >= 1 &&
+        Players[index].resource[WHEAT] >= 1 &&
+        Players[index].resource[WOOL] >= 1) {
+        int count = 0;
+        for (int i = 0; i < Players[index].haveNode->size; ++i) {
+            if (corner[Players[index].haveNode->data[i]].type == SWTTLEMENT)
+                ++count;
         }
-      }
-      if (red_flag == 0) {
-        if (total_input != give_amount)
-          printf("\e[4;31mwrong input! giveup amount should be %d \e[0m\n", give_amount);
-        else {
-          for (int k = 1; k < 6; k++)
-            gamePlayer[i].resource[k] -= array_give[k];
-        }
-      }
-    }
-  }
-  // move robber
-  int robber_land, desert_land, input_land;
-  for (int i = 0; i < 19; i++) {
-    if (land[i].robber == 1)
-      robber_land = i;
-    if (land[i].type == DESERT)
-      desert_land = i;
-  }
-  int bool_success = 0;
-    if(gamePlayer[current_player].bot){
-        bot_choose_robber(current_player,robber_land, desert_land, &input_land);
-        bool_success = 1;
-    }
-  
-  while (!bool_success) {
-    printf("which land would you move the robber to ? :");
-    scanf(" %d", &input_land);
-    if (input_land > 18 || input_land < 0) {
-      continue;
-    }
-    if (input_land == robber_land || input_land == desert_land)
-      printf("\e[4;31mwrong input! Desert is %d, original robber at %d\e[0m\n", desert_land,
-             robber_land);
-    else
-      bool_success = 1;
-  }
-  land[input_land].robber = 1;
-  land[robber_land].robber = 0;
-  robber_land = input_land;
-  //
-  // steal resource
-  int array_bool_player[4] = {0};
-  int array_player_total[4] = {0};
-  int bool_steal_able = 0;
-  int steal_from; // 0 - 3
-  int bot_steal_from, most_stealable = 0;
-  for (int i = 0; i < 6; i++) {
-    if (land[robber_land].linkedNode[i]->belong != PUBLIC)
-      array_bool_player[land[robber_land].linkedNode[i]->belong - 1] = 1;
-  }
-  array_bool_player[current_player] = 0;
-  for (int i = 0; i < 4; i++) {
-    if (array_bool_player[i] == 1) {// if this player i index is near the new robber land
-      for (int k = 1; k < 6; k++) {
-        array_player_total[i] += gamePlayer[i].resource[k];
-      }
-      if (array_player_total[i]) {
-        printf("\e[38;5;%dmplayer %d \e[0mhas %d resources", TEAMCOLOR[gamePlayer[i].type], i + 1, array_player_total[i]);
-        //find most resources among steable player for bot to steal
-        if(most_stealable < array_player_total[i]){
-            most_stealable = array_player_total[i];
-            bot_steal_from = i;
+        if (count >= 5) return 0;
+        for (int i = 0; i < Players[index].haveSide->size; ++i) {
+            int can = 1;
+            for (int j = 0; j < 2; ++j) {
+                if (edge[Players[index].haveSide->data[i]].linkedNode[j] ==
+                    None) {
+                    can = 1;
+                    for (int k = 0; k < 3; ++k) {
+                        if (edge[Players[index].haveSide->data[i]]
+                                .linkedNode[j]
+                                ->linkedNode[k]
+                                ->belong != NONE) {
+                            can = 0;
+                            break;
+                        }
+                    }
+                    if (can) {
+                        return 1;
+                    }
+                }
             }
-        bool_steal_able = 1;// 稍後若機器人，則選這個i偷
-      } else
-        array_bool_player[i] = 0; // 原本是候選人，但無資源所以移除
+        }
     }
-  }
+    return 0;
+}
+bool testBuildCity(player *Players, int index) {
+    if (Players[index].resource[METAL] >= 3 &&
+        Players[index].resource[WHEAT] >= 2) {
+        int count = 0;
+        for (int i = 0; i < Players[index].haveNode->size; ++i) {
+            if (corner[Players[index].haveNode->data[i]].type == CITY) ++count;
+        }
+        if (count >= 4) return 0;
+        for (int i = 0; i < Players[index].haveNode->size; ++i) {
+            if (corner[Players[index].haveNode->data[i]].type == SWTTLEMENT) {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+void useDevlopCard(player *Players, int index) {}
+void trade(player *Players, int index) {}
+bool checkWin(player *Players, int index) {
+    int score = Players[index].Score;
+    for (int i = 0; i < Players[index].card->size; ++i) {
+        if (Players[index].card->data[i] >= CHAPEL) {
+            ++score;
+        }
+    }
+    return score >= 10;
+}
+void updateLongestRoad(player *Players, int index) {
+    int table[54][54] = {0};
+    for (int i = 0; i < 54; ++i) {
+        for (int j = 0; j < 54; ++j) {
+            if (i == j)
+                table[i][j] = 0;
+            else
+                table[i][j] = 10000;
+        }
+    }
+    for (int i = 0; i < Players[index].haveSide->size; ++i) {
+        table[edge[Players[index].haveSide->data[i]].linkedNode[0]->index]
+             [edge[Players[index].haveSide->data[i]].linkedNode[1]->index] = -1;
+        table[edge[Players[index].haveSide->data[i]].linkedNode[1]->index]
+             [edge[Players[index].haveSide->data[i]].linkedNode[0]->index] = -1;
+    }
+    for (int k = 0; k < 54; ++k) {
+        if (edge[k].belong == Players[index].type)
+            for (int s = 0; s < 54; ++s) {
+                if (edge[s].belong == Players[index].type)
+                    for (int t = 0; t < 54; ++t) {
+                        if (edge[t].belong == Players[index].type)
+                            table[s][t] =
+                                min(table[s][t], table[s][k] + table[k][t]);
+                    }
+            }
+    }
+    int ans = 0;
+    for (int i = 0; i < 54; ++i) {
+        if (edge[i].belong == Players[index].type)
+            for (int j = 0; j < 54; ++j) {
+                if (edge[j].belong == Players[index].type)
+                    if (table[i][j] < ans) {
+                        ans = table[i][j];
+                    }
+            }
+    }
+    Players[index].road = -1 * ans;
+}
+void knight_king(player *gamePlayer, int current_player, int playerNumber, int *knight_owner){
   
-  int bool_select = 0;
-  if(gamePlayer[current_player].bot && bool_steal_able){
-    bool_select = 1;
-    steal_from = bot_steal_from;
+  for (int j = 0; j < gamePlayer[current_player].card->size; ++j) {
+    if (gamePlayer[current_player].card->get(gamePlayer[current_player].card, j) == KNIGHT) {
+        gamePlayer[current_player].card->remove(gamePlayer[current_player].card, j);
+        break;
+    } 
   }
-  while (!bool_select && bool_steal_able) {
-    printf(", choose one player to select their resources:");
-    scanf(" %d", &steal_from); // input 1 - 4
-    steal_from--;              // 0 - 3
-    if (steal_from >= playerNumber || steal_from < 0) {
-      printf("\e[4;31m wrong input! Input illegal: out of player range\e[0m\n");
-      continue;
-    }
-    if (steal_from == current_player) {
-      printf("\e[4;31mwrong input! Input illegal: you chose Player %d yourself\e[0m\n",
-             current_player);
-      continue;
-    }
-    if (array_bool_player[steal_from] == 0) {
-      printf("\e[4;31mwrong input! Input illegal: player not available\e[0m\n");
-    }
-    bool_select = 1;
-  }
-  // get resource
-  if (bool_select) {
-    srand(time(NULL));
-    int r = rand() % array_player_total[steal_from] + 1;
-    int tmp = 0;
-    while (r > 0) {
-      tmp++;
-      r -= gamePlayer[steal_from].resource[tmp];
-    }
-    gamePlayer[steal_from].resource[tmp] -= 1;
-    gamePlayer[current_player].resource[tmp] += 1;
-    printf("\e[38;5;%dmplayer %d \e[0m steal %s from \e[38;5;%dmplayer %d \e[0m \n", TEAMCOLOR[gamePlayer[current_player].type], current_player + 1,
-           resourceStr[tmp], TEAMCOLOR[gamePlayer[steal_from].type], steal_from + 1);
-  } else {
-    printf("no stealing\n");
-  }
-  
-  return;
-}
-void trade(int current_palyer) {
-  int give, get, give_amount;
-  int best_trade_int[6] = {0, 4, 4, 4, 4, 4};
-
-  // print resource
-  printf("wood:%d bricks:%d wool:%d wheat:%d metal:%d\n",
-         gamePlayer[current_palyer].resource[WOOD], gamePlayer[current_palyer].resource[BRICKS],
-         gamePlayer[current_palyer].resource[WOOL], gamePlayer[current_palyer].resource[WHEAT],
-         gamePlayer[current_palyer].resource[METAL]);
-  // find the best trade among bank and port
-  for (int port_idx = 0; port_idx < gamePlayer[current_palyer].havePort->size; port_idx++) {
-    for (int resource_idx = 1; resource_idx < 6; resource_idx++) {
-      int port_code =
-          gamePlayer[current_palyer].havePort->get(gamePlayer[current_palyer].havePort, port_idx);
-      if (tradePort[port_code].type == resource_idx ||
-          tradePort[port_code].type == 0) {
-        if (best_trade_int[resource_idx] > tradePort[port_code].request)
-          best_trade_int[resource_idx] = tradePort[port_code].request;
-      }
-    }
-  }
-
-  // print best options
-  printf("\e[38;5;%dmplayer %d \e[0m", TEAMCOLOR[gamePlayer[current_palyer].type], current_palyer+1);
-  printf("can give %d %s or %d %s or %d %s or %d %s or %d %s or for one "
-         "resource (1. wood 2. bricks 3. wool 4. wheat 5. metal):\n give, get",
-         best_trade_int[1], resourceStr[1], best_trade_int[2], resourceStr[2],
-         best_trade_int[3], resourceStr[3], best_trade_int[4], resourceStr[4],
-         best_trade_int[5], resourceStr[5]);
-  // choose resouce to trade
-  scanf("%d %d", &give, &get);
-  if (give > 5 || give < 1 || get > 5 || get < 1) {
-    printf("\e[4;31m wrong input, try again\e[0m\n");
-    return;
-  }
-
-  // check player resource amount
-  if (gamePlayer[current_palyer].resource[give] < best_trade_int[give]) {
-    printf("\e[4;31m not enough resources, try again\e[0m\n");
-    return;
-  }
-  gamePlayer[current_palyer].resource[get] += 1;
-  gamePlayer[current_palyer].resource[give] -= best_trade_int[give];
-  return;
-}
-
-int score_calculate(){
-    return 1;
-}
-
-
-void knight_king( int current_player, int playerNumber, int *knight_owner){
   ++gamePlayer[current_player].knight;
   int more_knight_out = 0;
 
@@ -765,157 +826,9 @@ void knight_king( int current_player, int playerNumber, int *knight_owner){
 
   //printf("player%d's outknight is more than %d player(s)\n", i+1, more_knight_out);
   if(more_knight_out == playerNumber - 1 && gamePlayer[current_player].knight >= 3){
-    *knight_owner = current_player+1;
-    printf("Knight owner is player %d.\n",*knight_owner);
+    *knight_owner = current_player;
+    printf("Knight owner is player %d.\n",*knight_owner+1);
     return ;
   }
   return;
-}
-void bot_robberK(int bot_player, int playerNumber){
-    int robber_land, desert_land, input_land;
-    for (int i = 0; i < 19; i++) {
-        if (land[i].robber == 1){
-          robber_land = i;
-        }
-        if (land[i].type == DESERT){
-          desert_land = i;
-        }
-    }
-    bot_choose_robber(bot_player, robber_land, desert_land, &input_land);
-    
-    land[input_land].robber = 1;
-    land[robber_land].robber = 0;
-    robber_land = input_land;
-    int array_bool_player[4] = {0};
-    int array_player_total[4] = {0};
-    int bool_steal_able = 0;
-    int bot_steal_from, most_stealable = 0;
-    for (int i = 0; i < 6; i++) {
-        if (land[robber_land].linkedNode[i]->belong != PUBLIC)
-            array_bool_player[land[robber_land].linkedNode[i]->belong - 1] = 1;
-    }
-    array_bool_player[bot_player] = 0;
-  for (int i = 0; i < 4; i++) {
-    if (array_bool_player[i] == 1) {// if this player i index is near the new robber land
-      for (int k = 1; k < 6; k++) {
-        array_player_total[i] += gamePlayer[i].resource[k];
-      }
-      if (array_player_total[i]) {
-        printf("\e[38;5;%dmplayer %d \e[0mhas %d resources", TEAMCOLOR[gamePlayer[i].type], i + 1, array_player_total[i]);
-        //find most resources among steable player for bot to steal
-        if(most_stealable < array_player_total[i]){
-            most_stealable = array_player_total[i];
-            bot_steal_from = i;
-            }
-        bool_steal_able = 1;// 稍後若機器人，則選這個i偷
-      } else
-        array_bool_player[i] = 0; // 原本是候選人，但無資源所以移除
-    }
-  }
-  
- 
-  // get resource
-    if (bool_steal_able) {
-        srand(time(NULL));
-        int r = rand() % array_player_total[bot_steal_from] + 1;
-        int tmp = 0;
-        while (r > 0) {
-            tmp++;
-            r -= gamePlayer[bot_steal_from].resource[tmp];
-        }
-        gamePlayer[bot_steal_from].resource[tmp] -= 1;
-        gamePlayer[bot_player].resource[tmp] += 1;
-        printf("\e[38;5;%dmplayer %d \e[0m steal %s from \e[38;5;%dmplayer %d \e[0m \n", TEAMCOLOR[gamePlayer[bot_player].type], bot_player + 1,
-            resourceStr[tmp], TEAMCOLOR[gamePlayer[bot_steal_from].type], bot_steal_from + 1);
-  } else {
-    printf("no stealing\n");
-  }
-    return ;
-}
-void robberK(int current_player, int playerNumber) {
-  // move robber
-  int robber_land, desert_land, input_land;
-  for (int i = 0; i < 19; i++) {
-    if (land[i].robber == 1){
-      robber_land = i;
-    }
-    if (land[i].type == DESERT){
-      desert_land = i;
-    }
-  }
-  int bool_success = 0;
-  while (!bool_success) {
-    printf("which land would you move the robber to ? :");
-    scanf(" %d", &input_land);
-    if (input_land > 18 || input_land < 0) {
-      continue;
-    }
-    if (input_land == robber_land || input_land == desert_land){
-      printf("wrong input! Desert is %d, original robber at %d\n", desert_land,
-             robber_land);
-    }
-    else
-      bool_success = 1;
-  }
-  land[input_land].robber = 1;
-  land[robber_land].robber = 0;
-  robber_land = input_land;
-  //
-  // steal resource
-  int array_bool_player[4] = {0};
-  int array_player_total[4] = {0};
-  int bool_steal_able = 0;
-  int steal_from; // 0 - 3
-  for (int i = 0; i < 6; i++) {
-    if (land[robber_land].linkedNode[i]->belong != PUBLIC)
-      array_bool_player[land[robber_land].linkedNode[i]->belong - 1] = 1;
-  }
-  array_bool_player[current_player] = 0;
-  for (int i = 0; i < 4; i++) {
-    if (array_bool_player[i] == 1) {
-      for (int k = 1; k < 6; k++) {
-        array_player_total[i] += gamePlayer[i].resource[k];
-      }
-      if (array_player_total[i]) {
-        printf("PLAYER %d has %d resources", i + 1, array_player_total[i]);
-        bool_steal_able = 1;
-      } else
-        array_bool_player[i] = 0; // 原本是候選人，但無資源所以移除
-    }
-  }
-  int bool_select = 0;
-  while (!bool_select && bool_steal_able) {
-    printf(", choose one player to select their resources:");
-    scanf(" %d", &steal_from); // input 1 - 4
-    steal_from--;              // 0 - 3
-    if (steal_from >= playerNumber || steal_from < 0) {
-      printf("wrong input! Input illegal: out of player range\n");
-      continue;
-    }
-    if (steal_from == current_player) {
-      printf("wrong input! Input illegal: you chose Player %d yourself\n",
-             current_player);
-      continue;
-    }
-    if (array_bool_player[steal_from] == 0) {
-      printf("wrong input! Input illegal: player not available\n");
-    }
-    bool_select = 1;
-  }
-  // get resource
-  if (bool_select) {
-    srand(time(NULL));
-    int r = rand() % array_player_total[steal_from] + 1;
-    int tmp = 0;
-    while (r > 0) {
-      tmp++;
-      r -= gamePlayer[steal_from].resource[tmp];
-    }
-    gamePlayer[steal_from].resource[tmp] -= 1;
-    gamePlayer[current_player].resource[tmp] += 1;
-    printf("PLAYER %d steal %s from PLAYER %d\n", current_player + 1,
-           resourceStr[tmp], steal_from + 1);
-  } else {
-    printf("no stealing\n");
-  }
 }
