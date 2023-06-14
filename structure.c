@@ -457,7 +457,7 @@ void  random_Array(int *arr, int size){
     free(chosen_index);
     return;
 }
-void giveResource(int dice_number, piece *land, player *gamePlayer) {
+void giveResource(int dice_number) {
   // number is two only one land
   if (dice_number == 2) {
     int the_land;
@@ -493,7 +493,8 @@ void giveResource(int dice_number, piece *land, player *gamePlayer) {
   }
   return;
 }
-void bot_discards_resources(int bot_player, player *gamePlayer, int playerNumber, piece *land){
+void bot_discards_resources(int bot_player, int playerNumber){
+
     int *bot_random_resources;// an array with randomized resources of bot player e.g. 1 3 4 5 2 1 -> 2 wood .....
     int brr_idx = 0; // ^'s index
     int give_amount = 0, total_input = 0;
@@ -524,11 +525,11 @@ void bot_discards_resources(int bot_player, player *gamePlayer, int playerNumber
            array_give[WOOD], array_give[BRICKS],
           array_give[WOOL], array_give[WHEAT],
            array_give[METAL]);
-
+    
     return;
 }
 // bot is moving robber
-void bot_choose_robber(int bot_player,piece *land, int robber_land,int desert_land, int *input_land){
+void bot_choose_robber(int bot_player, int robber_land,int desert_land, int *input_land){
     int is_self_here[20] = {0};
     int opponents_num_here[20]={0};
     is_self_here[19] = 0;
@@ -573,11 +574,15 @@ void bot_choose_robber(int bot_player,piece *land, int robber_land,int desert_la
         *input_land = best;
     return;
 }
-void robber(int current_player, player *gamePlayer, int playerNumber, piece *land) {
+/*void playercpy(player *dest, player *src ){
+
+  return;
+}*/
+void robber(int current_player, int playerNumber) {
   // give up resouces more than 7
   for (int i = 0; i < playerNumber; i++) {
     if(gamePlayer[i].bot){
-        bot_discards_resources(i, gamePlayer, playerNumber, land);
+        bot_discards_resources(i, playerNumber);
         continue;
     }
     int give_amount = 0, total_input = 0;
@@ -630,7 +635,7 @@ void robber(int current_player, player *gamePlayer, int playerNumber, piece *lan
   }
   int bool_success = 0;
     if(gamePlayer[current_player].bot){
-        bot_choose_robber(current_player, land, robber_land, desert_land, &input_land);
+        bot_choose_robber(current_player,robber_land, desert_land, &input_land);
         bool_success = 1;
     }
   
@@ -718,8 +723,10 @@ void robber(int current_player, player *gamePlayer, int playerNumber, piece *lan
   } else {
     printf("no stealing\n");
   }
+  
+  return;
 }
-void trade(int current_palyer, player *gamePlayer, port *tradePort) {
+void trade(int current_palyer) {
   int give, get, give_amount;
   int best_trade_int[6] = {0, 4, 4, 4, 4, 4};
 
@@ -770,7 +777,7 @@ int score_calculate(){
 }
 
 
-void knight_king(player *gamePlayer, int current_player, int playerNumber, int *knight_owner){
+void knight_king( int current_player, int playerNumber, int *knight_owner){
   ++gamePlayer[current_player].knight;
   int more_knight_out = 0;
 
@@ -788,7 +795,7 @@ void knight_king(player *gamePlayer, int current_player, int playerNumber, int *
   }
   return;
 }
-void bot_robberK(int bot_player, player *gamePlayer, int playerNumber, piece *land){
+void bot_robberK(int bot_player, int playerNumber){
     int robber_land, desert_land, input_land;
     for (int i = 0; i < 19; i++) {
         if (land[i].robber == 1){
@@ -798,7 +805,7 @@ void bot_robberK(int bot_player, player *gamePlayer, int playerNumber, piece *la
           desert_land = i;
         }
     }
-    bot_choose_robber(bot_player,land, robber_land, desert_land, &input_land);
+    bot_choose_robber(bot_player, robber_land, desert_land, &input_land);
     
     land[input_land].robber = 1;
     land[robber_land].robber = 0;
@@ -849,58 +856,55 @@ void bot_robberK(int bot_player, player *gamePlayer, int playerNumber, piece *la
   }
     return ;
 }
-void robberK(int current_player, player** gamePlayer, int playerNumber,
-             piece** land) {
-   // move robber
+void robberK(int current_player, int playerNumber) {
+  // move robber
   int robber_land, desert_land, input_land;
   for (int i = 0; i < 19; i++) {
-    if (land[i]->robber == 1){
+    if (land[i].robber == 1){
       robber_land = i;
     }
-    if (land[i]->type == DESERT){
+    if (land[i].type == DESERT){
       desert_land = i;
     }
   }
   int bool_success = 0;
-  while (bool_success == 0) {
+  while (!bool_success) {
     printf("which land would you move the robber to ? :");
     scanf(" %d", &input_land);
     if (input_land > 18 || input_land < 0) {
       continue;
     }
-    if (input_land == robber_land || input_land == desert_land)
-      printf("\e[4;31mwrong input! Desert is %d, original robber at %d\e[0m\n", desert_land,
+    if (input_land == robber_land || input_land == desert_land){
+      printf("wrong input! Desert is %d, original robber at %d\n", desert_land,
              robber_land);
+    }
     else
       bool_success = 1;
   }
-  land[input_land]->robber = 1;
-  land[robber_land]->robber = 0;
+  land[input_land].robber = 1;
+  land[robber_land].robber = 0;
   robber_land = input_land;
-
-
+  //
   // steal resource
-
   int array_bool_player[4] = {0};
   int array_player_total[4] = {0};
   int bool_steal_able = 0;
   int steal_from; // 0 - 3
   for (int i = 0; i < 6; i++) {
-    if (land[robber_land]->linkedNode[i]->belong != PUBLIC)
-      array_bool_player[land[robber_land]->linkedNode[i]->belong - 1] = 1;
+    if (land[robber_land].linkedNode[i]->belong != PUBLIC)
+      array_bool_player[land[robber_land].linkedNode[i]->belong - 1] = 1;
   }
   array_bool_player[current_player] = 0;
   for (int i = 0; i < 4; i++) {
     if (array_bool_player[i] == 1) {
       for (int k = 1; k < 6; k++) {
-        array_player_total[i] += gamePlayer[i]->resource[k];
+        array_player_total[i] += gamePlayer[i].resource[k];
       }
       if (array_player_total[i]) {
-        printf("\e[38;5;%dmplayer %d \e[0mhas %d resources", TEAMCOLOR[gamePlayer[i]->type], i + 1, array_player_total[i]);
+        printf("PLAYER %d has %d resources", i + 1, array_player_total[i]);
         bool_steal_able = 1;
-      } else{
+      } else
         array_bool_player[i] = 0; // 原本是候選人，但無資源所以移除
-      }
     }
   }
   int bool_select = 0;
@@ -909,16 +913,16 @@ void robberK(int current_player, player** gamePlayer, int playerNumber,
     scanf(" %d", &steal_from); // input 1 - 4
     steal_from--;              // 0 - 3
     if (steal_from >= playerNumber || steal_from < 0) {
-      printf("\e[4;31m wrong input! Input illegal: out of player range\e[0m\n");
+      printf("wrong input! Input illegal: out of player range\n");
       continue;
     }
     if (steal_from == current_player) {
-      printf("\e[4;31mwrong input! Input illegal: you chose Player %d yourself\e[0m\n",
+      printf("wrong input! Input illegal: you chose Player %d yourself\n",
              current_player);
       continue;
     }
     if (array_bool_player[steal_from] == 0) {
-      printf("\e[4;31mwrong input! Input illegal: player not available\e[0m\n");
+      printf("wrong input! Input illegal: player not available\n");
     }
     bool_select = 1;
   }
@@ -929,14 +933,13 @@ void robberK(int current_player, player** gamePlayer, int playerNumber,
     int tmp = 0;
     while (r > 0) {
       tmp++;
-      r -= gamePlayer[steal_from]->resource[tmp];
+      r -= gamePlayer[steal_from].resource[tmp];
     }
-    gamePlayer[steal_from]->resource[tmp] -= 1;
-    gamePlayer[current_player]->resource[tmp] += 1;
-    printf("\e[38;5;%dmplayer %d \e[0m steal %s from \e[38;5;%dmplayer %d \e[0m \n", TEAMCOLOR[gamePlayer[current_player]->type], current_player + 1,
-           resourceStr[tmp], TEAMCOLOR[gamePlayer[steal_from]->type], steal_from + 1);
+    gamePlayer[steal_from].resource[tmp] -= 1;
+    gamePlayer[current_player].resource[tmp] += 1;
+    printf("PLAYER %d steal %s from PLAYER %d\n", current_player + 1,
+           resourceStr[tmp], steal_from + 1);
   } else {
     printf("no stealing\n");
   }
-
 }

@@ -308,9 +308,9 @@ int main() {
                     if (step == 1) {
                         number = rollDice();
                         if (number == 7) {
-                            robber(i, gamePlayer, playerNumber, land);
+                            robber(i,  playerNumber);
                         } else {
-                            giveResource(number, land, gamePlayer);
+                            giveResource(number );
                         }
                         state = 1;
                     } else if (step == 2 && haveK) {
@@ -322,11 +322,12 @@ int main() {
                             } 
                         }
                         if(gamePlayer[i].bot){
-                                bot_robberK(i, gamePlayer, playerNumber, land);          
+                            printf("in\n");
+                                bot_robberK(i, playerNumber);          
                         }
                         else{
                             printf("in\n");
-                            robberK(i, &gamePlayer, playerNumber, &land);
+                            robberK(i, playerNumber);
                         }
                         //knight_king(gamePlayer, i, playerNumber, &knight_owner);
                     }
@@ -339,9 +340,9 @@ int main() {
                     if(gamePlayer[i].bot)
                         step = botOption(state, gamePlayer, i, land, haveK);
                     else
-                        scanf("%d", &step);
+                        scanf(" %d", &step);
                     if (step == 1)
-                        trade(i, gamePlayer, tradePort);
+                        trade(i);
                     if (step == 2)
                         state = 2;
                 }

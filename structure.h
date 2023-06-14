@@ -82,16 +82,17 @@ void printMap(const piece *p, int n, const port *t, int size, int space);
 void initPlayer(player *p);
 void freePlayer(player *p);
 void shufflePlayer(player *p, int n, int times);
-void giveResource(int dice_number, piece *land, player *gamePlayer);
-void bot_robberK(int bot_player, player *gamePlayer, int playerNumber, piece *land);
-void roober_discard_resources(int current_player, player *gamePlayer, int playerNumber,piece *land);
+//
+void giveResource(int dice_number);
+void bot_robberK(int bot_player, int playerNumber);
+void roober_discard_resources(int current_player, int playerNumber);
 void sswap(int *a, int *b);
 void  random_Array(int *arr, int size);
-void bot_discards_resources(int bot_player, player *gamePlayer, int playerNumber, piece *land);
-void bot_choose_robber(int bot_player, piece *land, int robber_land,int desert_land, int *input_land);
-void trade(int current_palyer, player *gamePlayer, port *tradePort);
-void robber(int current_player, player *gamePlayer, int playerNumber,piece *land);
-void robberK(int current_player, player **gamePlayer, int playerNumber, piece **land);
+void bot_discards_resources(int bot_player, int playerNumber);
+void bot_choose_robber(int bot_player, int robber_land,int desert_land, int *input_land);
+void trade(int current_palyert);
+void robber(int current_player,  int playerNumber);
+void robberK(int current_player, int playerNumber);
 int score_calculate();
-void knight_king(player *gamePlayer, int current_player, int playerNumber, int *knight_owner);
+void knight_king( int current_player, int playerNumber, int *knight_owner);
 #endif
