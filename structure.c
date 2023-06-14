@@ -171,8 +171,8 @@ int rollDice() {
     int a, b;
     a = rand() % 6 + 1;
     b = rand() % 6 + 1;
-    printf("roll %d and %d => %d\n", a, b, a + b);
-    return a + b;
+    printf("roll %d and %d => 12\n", a, b);
+    return 12;//a + b;
 }
 
 void shuffle(piece *p, int n, int times) {
@@ -457,41 +457,17 @@ void  random_Array(int *arr, int size){
     free(chosen_index);
     return;
 }
-void giveResource(int dice_number) {
-  // number is two only one land
-  if (dice_number == 2) {
-    int the_land;
-    for (int i = 0; i < 19; i++) {
-      if (land[i].number == dice_number)
-        the_land = i;
+void giveResource(int index, int playerNum) {
+    for (int i = 0; i < 6; ++i) {
+        if (land[index].linkedNode[i]->belong) {
+            for (int j = 0; j < playerNum; ++j) {
+                if (gamePlayer[j].type == land[index].linkedNode[i]->belong) {
+                    gamePlayer[j].resource[land[index].type]++;
+                    break;
+                }
+            }
+        }
     }
-
-    if (land[the_land].type == DESERT)
-      return;
-    for (int k = 0; k < 6; k++) {
-      if (land[the_land].linkedNode[k]->belong == PUBLIC)
-        continue;
-      gamePlayer[land[the_land].linkedNode[k]->belong - 1]
-          .resource[land[the_land].type] += 1;
-    }
-  } else { // number not two then 2 lands
-    int the_land[2], idx = 0;
-    for (int i = 0; i < 19; i++) {
-      if (land[i].number == dice_number)
-        the_land[idx++] = i;
-    }
-    for (int i = 0; i < 2; i++) {
-      if (land[the_land[i]].type == DESERT)
-        continue;
-      for (int k = 0; k < 6; k++) {
-        if (land[the_land[i]].linkedNode[k]->belong == PUBLIC)
-          continue;
-        gamePlayer[land[the_land[i]].linkedNode[k]->belong - 1]
-            .resource[land[the_land[i]].type] += 1;
-      }
-    }
-  }
-  return;
 }
 void bot_discards_resources(int bot_player, int playerNumber){
 

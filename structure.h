@@ -83,7 +83,7 @@ void initPlayer(player *p);
 void freePlayer(player *p);
 void shufflePlayer(player *p, int n, int times);
 //
-void giveResource(int dice_number);
+void giveResource(int index, int playerNum);
 void bot_robberK(int bot_player, int playerNumber);
 void roober_discard_resources(int current_player, int playerNumber);
 void sswap(int *a, int *b);

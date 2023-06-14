@@ -1,6 +1,4 @@
-
-git push https://@github.com/manlin/Catan.git
-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
+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
 int test = 0;
     playerP.card->insert(playerP.card, playerP.card->size, KNIGHT);
     for (int j = 0; j < playerP.card->size; ++j) {

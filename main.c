@@ -310,7 +310,10 @@ int main() {
                         if (number == 7) {
                             robber(i,  playerNumber);
                         } else {
-                            giveResource(number );
+                            for (int j = 0; j < 19; ++j) {
+                                if (!land[j].robber && land[j].number == number)
+                                    giveResource(j, i);
+                        }
                         }
                         state = 1;
                     } else if (step == 2 && haveK) {
