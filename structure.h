@@ -13,6 +13,8 @@ enum TEAM {
     PLAYER2,  // com1
     PLAYER3,  // com2
     PLAYER4,  // com3
+    PLAYER5,  // com3
+    PLAYER6,  // com3
 };
 
 enum nodeType { NONE, SWTTLEMENT, CITY };
@@ -64,7 +66,6 @@ typedef struct _port {
 typedef struct _player {
     vectorInt *haveNode;
     vectorInt *haveSide;
-    vectorInt *havePort;
     int Score;
     int knight;
     int road;
@@ -82,17 +83,16 @@ void printMap(const piece *p, int n, const port *t, int size, int space);
 void initPlayer(player *p);
 void freePlayer(player *p);
 void shufflePlayer(player *p, int n, int times);
-//
-void giveResource(int index, int playerNum);
-void bot_robberK(int bot_player, int playerNumber);
-void roober_discard_resources(int current_player, int playerNumber);
-void sswap(int *a, int *b);
-void  random_Array(int *arr, int size);
-void bot_discards_resources(int bot_player, int playerNumber);
-void bot_choose_robber(int bot_player, int robber_land,int desert_land, int *input_land);
-void trade(int current_palyert);
-void robber(int current_player,  int playerNumber);
-void robberK(int current_player, int playerNumber);
-int score_calculate();
-void knight_king( int current_player, int playerNumber, int *knight_owner);
+void giveResource(piece *land, int index, player *p, int playerNum);
+void robber(piece *land, int *robberLoc, int locate);
+void chooseRobber(player *p, int index);
+void useDevlopCard(player *Players, int index);
+void trade(player *Players, int index);
+bool checkWin(player *Players, int index);
+void updateLongestRoad(player *Players, int index);
+bool testBuildRoad(player *Players, int index);
+bool testBuildSwttlement(player *Players, int index);
+bool testBuildCity(player *Players, int index);
+void knight_king(player *gamePlayer, int current_player, int playerNumber, int *knight_owner);
+
 #endif
